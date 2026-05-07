@@ -3,7 +3,7 @@
 services:
   postgres:
     image: postgres:16-alpine
-    restart: on-failure 
+    restart: on-failure
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -12,6 +12,7 @@ services:
       - 5432:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - postgres
 
@@ -33,15 +34,17 @@ services:
       - postgres
 
   web:
-    build: ./frontend 
+    build: ./frontend
     restart: on-failure
+    environment:
+      - API_TARGET=http://backend:5000
     ports:
       - 80:5173
     volumes:
       - ./frontend:/project
       - /project/node_modules
     depends_on:
-      - backend 
+      - backend
     networks:
       - postgres
 

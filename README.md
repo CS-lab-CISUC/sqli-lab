@@ -22,7 +22,7 @@ This type of SQLi occurs when the attacker cannot use the same channel to receiv
 ## Lab Structure
 - The lab is structured by levels, each level focuses on a specific type of SQLi vulnerability and unlocks the next one.
 ### Level 1-X: In-Band SQLi
-- Level 1-1: Login bypass
+- Level 1-1: Login bypass [X]
 - Level 1-2: Where clause manipulation
 - Level 1-3: Extraction of database version
 - Level 1-3: Extracting data using UNION
