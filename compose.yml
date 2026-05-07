@@ -32,6 +32,19 @@ services:
     networks:
       - postgres
 
+  web:
+    build: ./frontend 
+    restart: on-failure
+    ports:
+      - 80:8080
+    volumes:
+      - ./frontend:/project
+      - /project/node_modules
+    depends_on:
+      - backend 
+    networks:
+      - postgres
+
 networks:
   postgres:
 
