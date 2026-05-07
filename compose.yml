@@ -1,4 +1,4 @@
-# DISCLAIMER: This projects has HARDCODED credentials. This should NEVER be like this in a production environment. It's only like this because it's a LAB.
+# DISCLAIMER: This projects has HARDCODED credentials. This should NEVER be like this in a production environment. It's only like this because it's a LAB, to speed things up.
 
 services:
   postgres:
@@ -16,8 +16,24 @@ services:
       - postgres
 
   backend:
+    build: ./backend
+    restart: on-failure
+    environment:
+      - DB_HOST=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=postgres
+    ports:
+      - 8000:5000
+    volumes:
+      - ./backend:/app 
+    depends_on:
+      - postgres
+    networks:
+      - postgres
 
 networks:
   postgres:
+
 volumes:
   postgres_data:
