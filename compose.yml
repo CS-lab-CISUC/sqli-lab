@@ -1,0 +1,23 @@
+# DISCLAIMER: This projects has HARDCODED credentials. This should NEVER be like this in a production environment. It's only like this because it's a LAB.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: on-failure 
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - postgres
+
+  backend:
+
+networks:
+  postgres:
+volumes:
+  postgres_data:
