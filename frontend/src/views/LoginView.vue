@@ -20,7 +20,8 @@ async function handleLogin() {
     if (!res.ok) {
       error.value = data.message ?? 'Login failed.'
     } else {
-      localStorage.setItem('user', JSON.stringify({ username: data.username, role: data.role }))
+      localStorage.setItem('token', data.token)
+      sessionStorage.setItem('level1-1-passed', '1')
       window.location.href = '/dashboard'
     }
   } catch {

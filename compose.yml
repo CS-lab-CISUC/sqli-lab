@@ -24,6 +24,7 @@ services:
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - DB_NAME=postgres
+      - JWT_SECRET=jumentos-lab-secret
     ports:
       - 8000:5000
     volumes:

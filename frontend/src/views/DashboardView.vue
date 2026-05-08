@@ -10,15 +10,25 @@ interface Entrada {
   confidencial: number
 }
 
-const user = ref<{ username: string; role: string } | null>(null)
+const user = ref<{ sub: string; role: string } | null>(null)
 const search = ref('')
 const entradas = ref<Entrada[]>([])
 const error = ref('')
 const loading = ref(false)
+const congrats11 = ref(false)
+const congrats12 = ref(false)
 
 onMounted(() => {
-  const stored = localStorage.getItem('user')
-  if (stored) user.value = JSON.parse(stored)
+  const token = localStorage.getItem('token')
+  if (token) {
+    try {
+      user.value = JSON.parse(atob(token.split('.')[1]))
+    } catch { /* invalid token, router guard handles it */ }
+  }
+  if (sessionStorage.getItem('level1-1-passed')) {
+    congrats11.value = true
+    sessionStorage.removeItem('level1-1-passed')
+  }
   fetchEntradas()
 })
 
@@ -27,12 +37,22 @@ async function fetchEntradas() {
   loading.value = true
   try {
     const params = search.value ? `?search=${encodeURIComponent(search.value)}` : ''
-    const res = await fetch(`/api/entradas${params}`)
+    const token = localStorage.getItem('token') ?? ''
+    const res = await fetch(`/api/entradas${params}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (res.status === 401) {
+      window.location.href = '/login'
+      return
+    }
     const data = await res.json()
     if (!res.ok) {
       error.value = data.error ?? 'Erro ao carregar entradas.'
     } else {
       entradas.value = data
+      if (data.some((e: Entrada) => e.confidencial === 1)) {
+        congrats12.value = true
+      }
     }
   } catch {
     error.value = 'Não foi possível contactar o servidor.'
@@ -42,17 +62,28 @@ async function fetchEntradas() {
 }
 
 function logout() {
-  localStorage.removeItem('user')
+  localStorage.removeItem('token')
   window.location.href = '/login'
 }
 </script>
 
 <template>
   <div class="dashboard">
+    <div v-if="congrats11" class="congrats-banner" @click="congrats11 = false">
+      <span class="congrats-label">LEVEL 1-1 COMPLETE</span>
+      <span class="congrats-msg">You bypassed authentication via SQL injection. Well done.</span>
+      <span class="congrats-dismiss">&#x2715;</span>
+    </div>
+    <div v-if="congrats12" class="congrats-banner congrats-12" @click="congrats12 = false">
+      <span class="congrats-label">LEVEL 1-2 COMPLETE</span>
+      <span class="congrats-msg">You leaked confidential records by injecting into the WHERE clause. Well done.</span>
+      <span class="congrats-dismiss">&#x2715;</span>
+    </div>
+
     <nav class="navbar">
       <RouterLink to="/" class="nav-brand">JUMENTOS FC</RouterLink>
       <div class="nav-right">
-        <span v-if="user" class="nav-user">{{ user.username }}</span>
+        <span v-if="user" class="nav-user">{{ user.sub }}</span>
         <button class="logout-btn" @click="logout">Sair</button>
       </div>
     </nav>
@@ -347,5 +378,46 @@ function logout() {
   background: #3a0d00;
   color: #ff7043;
   border: 1px solid #7a2000;
+}
+
+.congrats-banner {
+  background: #0d1a00;
+  border-bottom: 2px solid #C9A84C;
+  padding: 0.85rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.congrats-12 {
+  background: #001a0d;
+  border-bottom-color: #4CAF84;
+}
+
+.congrats-label {
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #C9A84C;
+  white-space: nowrap;
+}
+
+.congrats-12 .congrats-label {
+  color: #4CAF84;
+}
+
+.congrats-msg {
+  font-size: 0.82rem;
+  color: #ccc;
+  flex: 1;
+}
+
+.congrats-dismiss {
+  font-size: 0.75rem;
+  color: #555;
+  flex-shrink: 0;
 }
 </style>

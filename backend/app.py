@@ -1,4 +1,8 @@
 import os
+from datetime import datetime, timezone, timedelta
+from functools import wraps
+
+import jwt
 import psycopg
 from flask import Flask, request, jsonify
 
@@ -8,6 +12,7 @@ DB_HOST = os.environ["DB_HOST"]
 DB_USER = os.environ["DB_USER"]
 DB_PASSWORD = os.environ["DB_PASSWORD"]
 DB_NAME = os.environ["DB_NAME"]
+JWT_SECRET = os.environ.get("JWT_SECRET", "dev-secret-change-in-prod")
 
 def get_conn():
     return psycopg.connect(
@@ -16,6 +21,21 @@ def get_conn():
         password=DB_PASSWORD,
         dbname=DB_NAME,
     )
+
+def require_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.headers.get("Authorization", "")
+        if not auth.startswith("Bearer "):
+            return jsonify({"error": "Unauthorized"}), 401
+        token = auth[7:]
+        try:
+            payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        except jwt.InvalidTokenError:
+            return jsonify({"error": "Unauthorized"}), 401
+        request.user = payload
+        return f(*args, **kwargs)
+    return decorated
 
 @app.route("/api/login", methods=["POST"])
 def login():
@@ -33,10 +53,20 @@ def login():
         return jsonify({"message": str(e)}), 500
 
     if user:
-        return jsonify({"message": "Login successful", "username": user[1], "role": user[2]})
+        token = jwt.encode(
+            {
+                "sub": user[1],
+                "role": user[2],
+                "exp": datetime.now(timezone.utc) + timedelta(hours=12),
+            },
+            JWT_SECRET,
+            algorithm="HS256",
+        )
+        return jsonify({"message": "Login successful", "username": user[1], "role": user[2], "token": token})
     return jsonify({"message": "Invalid credentials"}), 401
 
 @app.route("/api/entradas", methods=["GET"])
+@require_auth
 def entradas():
     search = request.args.get("search", "")
     try:

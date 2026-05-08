@@ -22,4 +22,10 @@ const router = createRouter({
   ],
 })
 
+router.beforeEach((to) => {
+  if (to.name === 'dashboard' && !localStorage.getItem('token')) {
+    return { name: 'login' }
+  }
+})
+
 export default router
