@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
-const username = ref('')
+const username = ref('admin')
 const password = ref('')
 const error = ref('')
 const loading = ref(false)
