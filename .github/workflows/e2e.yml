@@ -12,29 +12,27 @@ jobs:
 
       - name: Start stack
         run: docker compose up -d --build
-        working-directory: .
 
       - name: Wait for web to be ready
         run: |
           for i in $(seq 1 30); do
-            curl -sf http://localhost:80 && break
+            curl -sf http://localhost:80 && exit 0
             sleep 2
           done
+          echo "Stack never became ready" && exit 1
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
+      - uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
-        run: npm install
+        run: bun install
         working-directory: frontend
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: bunx playwright install --with-deps chromium
         working-directory: frontend
 
       - name: Run E2E tests
-        run: npx playwright test
+        run: bun run test:e2e
         working-directory: frontend
 
       - uses: actions/upload-artifact@v4
