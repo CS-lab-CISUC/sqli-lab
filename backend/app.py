@@ -35,3 +35,16 @@ def login():
     if user:
         return jsonify({"message": "Login successful", "username": user[1], "role": user[2]})
     return jsonify({"message": "Invalid credentials"}), 401
+
+@app.route("/api/entradas", methods=["GET"])
+def entradas():
+    search = request.args.get("search", "")
+    try:
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                query = f"SELECT id, nome, secao, data, confidencial FROM entradas WHERE nome LIKE '%{search}%' AND confidencial = 0"
+                cur.execute(query)
+                rows = cur.fetchall()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    return jsonify([{"id": r[0], "nome": r[1], "secao": r[2], "data": r[3], "confidencial": r[4]} for r in rows])
