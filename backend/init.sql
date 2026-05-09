@@ -1,4 +1,6 @@
+DROP TABLE IF EXISTS unsuspecting_table;
 DROP TABLE IF EXISTS segredos;
+DROP TABLE IF EXISTS bilhetes;
 DROP TABLE IF EXISTS transfers;
 DROP TABLE IF EXISTS entradas;
 DROP TABLE IF EXISTS users;
@@ -65,8 +67,35 @@ CREATE TABLE segredos (
 INSERT INTO segredos (descricao, valor) VALUES
     ('flag', 'JUMENTOS{err0r_b4s3d_pwn3d}');
 
+CREATE TABLE bilhetes (
+    id SERIAL PRIMARY KEY,
+    codigo VARCHAR(10) NOT NULL UNIQUE,
+    setor VARCHAR(50) NOT NULL,
+    disponivel BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+INSERT INTO bilhetes (codigo, setor, disponivel) VALUES
+    ('A1',  'Tribuna Norte',   TRUE),
+    ('A2',  'Tribuna Norte',   FALSE),
+    ('B7',  'Tribuna Sul',     TRUE),
+    ('C12', 'Bancada Lateral', TRUE),
+    ('D3',  'Tribuna Sul',     FALSE),
+    ('E5',  'Camarote VIP',    TRUE);
+
 CREATE USER sqli_app WITH PASSWORD 'sqli_app_pass';
 GRANT SELECT ON jumentususers, entradas, transfers TO sqli_app;
 
 CREATE USER sqli_goat WITH PASSWORD 'sqli_goat_pass';
 GRANT SELECT ON transfers, segredos TO sqli_goat;
+
+CREATE TABLE unsuspecting_table (
+    id SERIAL PRIMARY KEY,
+    descricao VARCHAR(50) NOT NULL,
+    juice VARCHAR(100) NOT NULL
+);
+
+INSERT INTO unsuspecting_table (descricao, juice) VALUES
+    ('flag', 'JUMENTOS{bl1nd_4s_4_d0nk3y}');
+
+CREATE USER sqli_level2 WITH PASSWORD 'level2pass';
+GRANT SELECT ON bilhetes, unsuspecting_table TO sqli_level2;

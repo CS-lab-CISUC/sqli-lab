@@ -25,6 +25,8 @@ services:
       - DB_PASSWORD=sqli_app_pass
       - DB_GOAT_USER=sqli_goat
       - DB_GOAT_PASSWORD=sqli_goat_pass
+      - DB_LEVEL2_USER=sqli_level2
+      - DB_LEVEL2_PASSWORD=level2pass
       - DB_NAME=postgres
       - JWT_SECRET=jumentos-lab-secret
     ports:

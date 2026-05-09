@@ -1,4 +1,4 @@
-# CSLabs - SQL Injection Lab
+# CSLab - SQL Injection Lab
 This lab is designed to teach you about SQL Injection (SQLi) vulnerabilities, how to identify them, and how to exploit them to extract sensitive information from a database. The lab is structured in multiple levels, each focusing on a specific type of SQLi vulnerability. By the end of this lab, you will have a solid understanding of SQLi and how to prevent it in your applications.
 
 ---
@@ -10,7 +10,6 @@ This lab is designed to teach you about SQL Injection (SQLi) vulnerabilities, ho
 1. **Install Docker Desktop**
    - Download and install [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop).
    - Launch Docker Desktop and wait until it shows **"Engine running"** in the bottom-left corner.
-   - Docker Compose is included — no separate install needed.
 
 2. **Install Git**
    - Download and install [Git for Windows](https://git-scm.com/download/win).
@@ -37,9 +36,9 @@ This lab is designed to teach you about SQL Injection (SQLi) vulnerabilities, ho
 
 1. **Install Docker**
    - **Mac**: Download and install [Docker Desktop for Mac](https://www.docker.com/products/docker-desktop). Docker Compose is included.
-   - **Linux**: Follow the [official Docker Engine install guide](https://docs.docker.com/engine/install/) for your distro, then install the Compose plugin:
+   - **Linux**: Follow the [official Docker Engine install guide](https://docs.docker.com/engine/install/) for your distro, then install Docker Compose:
      ```sh
-     sudo apt install docker-compose-plugin   # Debian/Ubuntu
+     sudo apt install docker-compose
      # or follow the guide for other distros
      ```
 
@@ -87,11 +86,14 @@ Additionally, an SQLi can be classified by its execution time:
 - Level 1-2: Where clause manipulation
 - Level 1-3: Extraction of database structure/ data using UNION
 - Level 1-4: Error-based data extraction
-### Level 2: Inferential SQLi
+### Level 2: Blind SQLi
 - Level 2-1: Boolean-based blind SQLi
 - Level 2-2: Time-based blind SQLi
-### Level 3: Out-of-Band SQLi
+- Level 2-3: Second-order SQLi
+### Level 3: Advanced / Chained
 - Level 3-1: OOB SQLi using DNS exfiltration
+- Level 3-2: WAF/filter bypass techniques
+- Level 3-3: Chaining SQLi with other vulnerabilities (e.g. RCE, SSRF)
 
 ---
 

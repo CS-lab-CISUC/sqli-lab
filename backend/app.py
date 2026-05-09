@@ -13,6 +13,8 @@ DB_USER = os.environ["DB_USER"]
 DB_PASSWORD = os.environ["DB_PASSWORD"]
 DB_GOAT_USER = os.environ["DB_GOAT_USER"]
 DB_GOAT_PASSWORD = os.environ["DB_GOAT_PASSWORD"]
+DB_LEVEL2_USER = os.environ["DB_LEVEL2_USER"]
+DB_LEVEL2_PASSWORD = os.environ["DB_LEVEL2_PASSWORD"]
 DB_NAME = os.environ["DB_NAME"]
 JWT_SECRET = os.environ.get("JWT_SECRET", "dev-secret-change-in-prod")
 
@@ -24,6 +26,11 @@ def get_conn():
 def get_conn_goat():
     return psycopg.connect(
         host=DB_HOST, user=DB_GOAT_USER, password=DB_GOAT_PASSWORD, dbname=DB_NAME,
+    )
+
+def get_conn_level2():
+    return psycopg.connect(
+        host=DB_HOST, user=DB_LEVEL2_USER, password=DB_LEVEL2_PASSWORD, dbname=DB_NAME,
     )
 
 def require_auth(f):
@@ -40,6 +47,9 @@ def require_auth(f):
         request.user = payload
         return f(*args, **kwargs)
     return decorated
+
+
+# LEVEL 1
 
 @app.route("/api/login", methods=["POST"])
 def login():
@@ -112,3 +122,19 @@ def perfil():
     if row:
         return jsonify({"encontrado": True})
     return jsonify({"encontrado": False})
+
+
+# LEVEL 2
+
+@app.route("/api/bilhete", methods=["GET"])
+def bilhete():
+    codigo = request.args.get("codigo", "")
+    try:
+        with get_conn_level2() as conn:
+            with conn.cursor() as cur:
+                query = f"SELECT id FROM bilhetes WHERE codigo = '{codigo}' AND disponivel = TRUE"
+                cur.execute(query)
+                row = cur.fetchone()
+    except Exception as e:
+        return jsonify({"disponivel": False}), 500
+    return jsonify({"disponivel": row is not None})

@@ -39,6 +39,7 @@ const news = [
         <li><a href="#">News</a></li>
         <li><a href="#">Matches</a></li>
         <li><a href="#">Players</a></li>
+        <li><RouterLink to="/tickets">Bilhetes</RouterLink></li>
         <li><RouterLink to="/login" class="nav-login">Login</RouterLink></li>
       </ul>
     </nav>

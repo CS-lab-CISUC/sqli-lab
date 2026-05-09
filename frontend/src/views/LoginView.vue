@@ -21,7 +21,7 @@ async function handleLogin() {
       error.value = data.message ?? 'Login failed.'
     } else {
       localStorage.setItem('token', data.token)
-      if (username.value !== data.username) {
+      if (data.username === 'admin') {
         sessionStorage.setItem('level1-1-passed', '1')
       }
       window.location.href = data.role === 'goat' ? '/dashboard/perfil' : '/dashboard'

