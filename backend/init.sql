@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS lista_vip;
+DROP TABLE IF EXISTS reservas;
 DROP TABLE IF EXISTS unsuspecting_table;
 DROP TABLE IF EXISTS segredos;
 DROP TABLE IF EXISTS bilhetes;
@@ -97,5 +99,22 @@ CREATE TABLE unsuspecting_table (
 INSERT INTO unsuspecting_table (descricao, juice) VALUES
     ('flag', 'JUMENTOS{bl1nd_4s_4_d0nk3y}');
 
+CREATE TABLE reservas (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(200) NOT NULL,
+    codigo VARCHAR(10) NOT NULL
+);
+
+CREATE TABLE lista_vip (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    segredo VARCHAR(100) NOT NULL
+);
+
+INSERT INTO lista_vip (nome, segredo) VALUES
+    ('Presidente', 'JUMENTOS{st0r3d_4nd_d4ng3r0us}');
+
 CREATE USER sqli_level2 WITH PASSWORD 'level2pass';
-GRANT SELECT ON bilhetes, unsuspecting_table TO sqli_level2;
+GRANT SELECT ON bilhetes, unsuspecting_table, lista_vip TO sqli_level2;
+GRANT SELECT, INSERT ON reservas TO sqli_level2;
+GRANT USAGE, SELECT ON SEQUENCE reservas_id_seq TO sqli_level2;

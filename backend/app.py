@@ -138,3 +138,36 @@ def bilhete():
     except Exception as e:
         return jsonify({"disponivel": False}), 500
     return jsonify({"disponivel": row is not None})
+
+@app.route("/api/reservar", methods=["POST"])
+def reservar():
+    data = request.get_json(silent=True) or {}
+    nome = data.get("nome", "")
+    codigo = data.get("codigo", "")
+    if not nome or not codigo:
+        return jsonify({"error": "Nome e código são obrigatórios"}), 400
+    try:
+        with get_conn_level2() as conn:
+            with conn.cursor() as cur:
+                cur.execute("INSERT INTO reservas (nome, codigo) VALUES (%s, %s)", (nome, codigo))
+    except Exception as e:
+        return jsonify({"error": "Ocorreu um erro"}), 500
+    return jsonify({"message": f"Reserva registada para {nome}."})
+
+@app.route("/api/ver-reserva", methods=["GET"])
+def ver_reserva():
+    codigo = request.args.get("codigo", "")
+    try:
+        with get_conn_level2() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT nome FROM reservas WHERE codigo = %s LIMIT 1", (codigo,))
+                row = cur.fetchone()
+                if not row:
+                    return jsonify({"error": "Reserva não encontrada"}), 404
+                nome = row[0]
+                query = f"SELECT b.setor FROM bilhetes b JOIN reservas r ON b.codigo = r.codigo WHERE r.nome = '{nome}'"
+                cur.execute(query)
+                row2 = cur.fetchone()
+    except Exception as e:
+        return jsonify({"error": "Ocorreu um erro"}), 500
+    return jsonify({"setor": row2[0] if row2 else None})

