@@ -19,12 +19,31 @@ const router = createRouter({
       name: 'dashboard',
       component: () => import('../views/DashboardView.vue'),
     },
+    {
+      path: '/dashboard/transfers',
+      name: 'transfers',
+      component: () => import('../views/TransfersView.vue'),
+    },
+    {
+      path: '/dashboard/perfil',
+      name: 'perfil',
+      component: () => import('../views/PerfilView.vue'),
+    },
   ],
 })
 
 router.beforeEach((to) => {
-  if (to.name === 'dashboard' && !localStorage.getItem('token')) {
+  const token = localStorage.getItem('token')
+  if ((to.name === 'dashboard' || to.name === 'transfers' || to.name === 'perfil') && !token) {
     return { name: 'login' }
+  }
+  if (to.name === 'perfil' && token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      if (payload.role !== 'goat') return { name: 'dashboard' }
+    } catch {
+      return { name: 'login' }
+    }
   }
 })
 

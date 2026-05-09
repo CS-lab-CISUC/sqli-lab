@@ -22,14 +22,20 @@ This type of SQLi occurs when the attacker cannot use the same channel to receiv
 ## Lab Structure
 - The lab is structured by levels, each level focuses on a specific type of SQLi vulnerability and unlocks the next one.
 ### Level 1-X: In-Band SQLi
-- Level 1-1: Login bypass [X]
+- Level 1-1: Login bypass
 - Level 1-2: Where clause manipulation
-- Level 1-3: Extraction of database version
-- Level 1-3: Extracting data using UNION
-- Level 1-5: Error-based data extraction
+- Level 1-3: Extraction of database structure/ data using UNION
+- Level 1-4: Error-based data extraction
 ### Level 2-X: Inferential SQLi
 - Level 2-1: Boolean-based blind SQLi
 - Level 2-2: Time-based blind SQLi
 ### Level 3-X: Out-of-Band SQLi
 - Level 3-1: OOB SQLi using DNS exfiltration
 
+---
+
+### Useful Resources
+- [PortSwigger SQLi Cheat Sheet](https://portswigger.net/web-security/sql-injection/cheat-sheet)
+- [OWASP SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection)
+- [OWASP SQLi Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html)
+- [PWN College Web Security](https://pwn.college/intro-to-cybersecurity/web-security/)

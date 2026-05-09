@@ -21,8 +21,10 @@ async function handleLogin() {
       error.value = data.message ?? 'Login failed.'
     } else {
       localStorage.setItem('token', data.token)
-      sessionStorage.setItem('level1-1-passed', '1')
-      window.location.href = '/dashboard'
+      if (username.value !== data.username) {
+        sessionStorage.setItem('level1-1-passed', '1')
+      }
+      window.location.href = data.role === 'goat' ? '/dashboard/perfil' : '/dashboard'
     }
   } catch {
     error.value = 'Could not reach server.'

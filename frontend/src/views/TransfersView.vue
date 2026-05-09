@@ -2,21 +2,20 @@
 import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 
-interface Entrada {
-  id: number
-  nome: string
-  secao: string
-  data: string
-  confidencial: number
+interface Transfer {
+  id: number | string
+  nome: string | null
+  origem: string | null
+  destino: string | null
+  valor: string | null
 }
 
 const user = ref<{ sub: string; role: string } | null>(null)
 const search = ref('')
-const entradas = ref<Entrada[]>([])
+const transfers = ref<Transfer[]>([])
 const error = ref('')
 const loading = ref(false)
-const congrats11 = ref(false)
-const congrats12 = ref(false)
+const congrats13 = ref(false)
 
 onMounted(() => {
   const token = localStorage.getItem('token')
@@ -25,20 +24,16 @@ onMounted(() => {
       user.value = JSON.parse(atob(token.split('.')[1]))
     } catch { /* invalid token, router guard handles it */ }
   }
-  if (sessionStorage.getItem('level1-1-passed')) {
-    congrats11.value = true
-    sessionStorage.removeItem('level1-1-passed')
-  }
-  fetchEntradas()
+  fetchTransfers()
 })
 
-async function fetchEntradas() {
+async function fetchTransfers() {
   error.value = ''
   loading.value = true
   try {
     const params = search.value ? `?search=${encodeURIComponent(search.value)}` : ''
     const token = localStorage.getItem('token') ?? ''
-    const res = await fetch(`/api/entradas${params}`, {
+    const res = await fetch(`/api/transfers${params}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
     if (res.status === 401) {
@@ -47,11 +42,11 @@ async function fetchEntradas() {
     }
     const data = await res.json()
     if (!res.ok) {
-      error.value = data.error ?? 'Erro ao carregar entradas.'
+      error.value = data.error ?? 'Erro ao carregar transferências.'
     } else {
-      entradas.value = data
-      if (data.some((e: Entrada) => e.confidencial === 1)) {
-        congrats12.value = true
+      transfers.value = data
+      if (data.some((t: Transfer) => t.id == null || isNaN(Number(t.id)))) {
+        congrats13.value = true
       }
     }
   } catch {
@@ -69,24 +64,17 @@ function logout() {
 
 <template>
   <div class="dashboard">
-    <div v-if="congrats11" class="congrats-banner" @click="congrats11 = false">
-      <span class="congrats-label">LEVEL 1-1 COMPLETE</span>
-      <span class="congrats-msg">You bypassed authentication via SQL injection. Well done.</span>
-      <span class="congrats-dismiss">&#x2715;</span>
-    </div>
-    <div v-if="congrats12" class="congrats-banner congrats-12" @click="congrats12 = false">
-      <div class="congrats-body">
-        <span class="congrats-label">LEVEL 1-2 COMPLETE</span>
-        <span class="congrats-msg">You leaked confidential records by injecting into the WHERE clause. Well done.</span>
-        <RouterLink to="/dashboard/transfers" class="congrats-next" @click.stop>Try Level 1-3 →</RouterLink>
-      </div>
+    <div v-if="congrats13" class="congrats-banner" @click="congrats13 = false">
+      <span class="congrats-label">LEVEL 1-3 COMPLETE</span>
+      <span class="congrats-msg">You enumerated the database structure via UNION injection. Well done. Now log in as <strong>cristiano</strong> for the next challenge.</span>
       <span class="congrats-dismiss">&#x2715;</span>
     </div>
 
     <nav class="navbar">
       <RouterLink to="/" class="nav-brand">JUMENTOS FC</RouterLink>
       <div class="nav-center">
-        <RouterLink to="/dashboard" class="nav-link nav-link-active">Entradas</RouterLink>
+        <RouterLink to="/dashboard" class="nav-link">Entradas</RouterLink>
+        <RouterLink to="/dashboard/transfers" class="nav-link nav-link-active">Transferências</RouterLink>
         <RouterLink v-if="user?.role === 'goat'" to="/dashboard/perfil" class="nav-link">Análise</RouterLink>
       </div>
       <div class="nav-right">
@@ -98,23 +86,19 @@ function logout() {
     <main class="content">
       <div class="section-header">
         <div class="section-title-group">
-          <h2 class="section-title">Entradas no Estádio</h2>
-          <p class="section-sub">Registo de acessos ao Estádio Jumentino</p>
+          <h2 class="section-title">Transferências da Temporada</h2>
+          <p class="section-sub">Movimentações do mercado — 2025/26</p>
         </div>
-        <button class="confidential-btn" disabled title="Acesso restrito">
-          <span class="lock-icon">&#128274;</span>
-          Ver Acessos Confidenciais
-        </button>
       </div>
 
       <div class="search-bar">
         <input
           v-model="search"
           type="text"
-          placeholder="Pesquisar por nome..."
-          @keyup.enter="fetchEntradas"
+          placeholder="Pesquisar por jogador..."
+          @keyup.enter="fetchTransfers"
         />
-        <button class="search-btn" @click="fetchEntradas" :disabled="loading">
+        <button class="search-btn" @click="fetchTransfers" :disabled="loading">
           {{ loading ? '...' : 'Pesquisar' }}
         </button>
       </div>
@@ -125,29 +109,22 @@ function logout() {
         <thead>
           <tr>
             <th>#</th>
-            <th>Nome</th>
-            <th>Seção</th>
-            <th>Data</th>
-            <th>Estado</th>
+            <th>Jogador</th>
+            <th>De</th>
+            <th>Para</th>
+            <th>Valor</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-if="entradas.length === 0">
-            <td colspan="5" class="empty">Nenhuma entrada encontrada.</td>
+          <tr v-if="transfers.length === 0">
+            <td colspan="5" class="empty">Nenhuma transferência encontrada.</td>
           </tr>
-          <tr
-            v-for="e in entradas"
-            :key="e.id"
-            :class="{ confidencial: e.confidencial === 1 }"
-          >
-            <td>{{ e.id }}</td>
-            <td>{{ e.nome }}</td>
-            <td>{{ e.secao }}</td>
-            <td>{{ e.data }}</td>
-            <td>
-              <span v-if="e.confidencial === 1" class="badge badge-confidencial">CONFIDENCIAL</span>
-              <span v-else class="badge badge-publico">Público</span>
-            </td>
+          <tr v-for="t in transfers" :key="String(t.id)">
+            <td>{{ t.id }}</td>
+            <td>{{ t.nome }}</td>
+            <td>{{ t.origem }}</td>
+            <td>{{ t.destino }}</td>
+            <td>{{ t.valor }}</td>
           </tr>
         </tbody>
       </table>
@@ -246,12 +223,7 @@ function logout() {
 }
 
 .section-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
   margin-bottom: 1.5rem;
-  gap: 1rem;
-  flex-wrap: wrap;
 }
 
 .section-title {
@@ -268,27 +240,6 @@ function logout() {
   color: #555;
   margin: 0;
   letter-spacing: 0.05em;
-}
-
-.confidential-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: #1a1a1a;
-  border: 1px solid #2a2a2a;
-  color: #444;
-  padding: 0.55rem 1rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: not-allowed;
-  font-family: inherit;
-}
-
-.lock-icon {
-  font-size: 0.8rem;
-  filter: grayscale(1) opacity(0.4);
 }
 
 .search-bar {
@@ -377,62 +328,21 @@ function logout() {
   background: #111;
 }
 
-.entries-table tr.confidencial td {
-  color: #fff;
-}
-
-.entries-table tr.confidencial:hover td {
-  background: #1a0d00;
-}
-
 .empty {
   text-align: center;
   color: #444;
   padding: 2rem !important;
 }
 
-.badge {
-  display: inline-block;
-  padding: 0.2rem 0.55rem;
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.badge-publico {
-  background: #0d1a0d;
-  color: #4a7c4a;
-  border: 1px solid #1a3a1a;
-}
-
-.badge-confidencial {
-  background: #3a0d00;
-  color: #ff7043;
-  border: 1px solid #7a2000;
-}
-
 .congrats-banner {
-  background: #0d1a00;
+  background: #001a14;
   border-bottom: 2px solid #C9A84C;
   padding: 0.85rem 2rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 1rem;
   cursor: pointer;
   user-select: none;
-}
-
-.congrats-12 {
-  background: #001a0d;
-  border-bottom-color: #4CAF84;
-}
-
-.congrats-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
 }
 
 .congrats-label {
@@ -444,37 +354,15 @@ function logout() {
   white-space: nowrap;
 }
 
-.congrats-12 .congrats-label {
-  color: #4CAF84;
-}
-
 .congrats-msg {
   font-size: 0.82rem;
   color: #ccc;
-}
-
-.congrats-next {
-  display: inline-block;
-  align-self: flex-start;
-  background: #4CAF84;
-  color: #000;
-  text-decoration: none;
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 0.45rem 1rem;
-  transition: background 0.2s;
-}
-
-.congrats-next:hover {
-  background: #7de0b0;
+  flex: 1;
 }
 
 .congrats-dismiss {
   font-size: 0.75rem;
   color: #555;
   flex-shrink: 0;
-  align-self: flex-start;
 }
 </style>
