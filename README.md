@@ -80,20 +80,20 @@ Additionally, an SQLi can be classified by its execution time:
 ---
 
 ## Lab Structure
-- The lab is structured by levels, each level focuses on a specific type of SQLi vulnerability and unlocks the next one.
+The lab is structured by levels, each level focuses on a specific type of SQLi vulnerability and unlocks the next one. The levels are designed to gradually increase in difficulty and complexity, allowing you to build your skills and knowledge step by step. Each level has a writeup that explains the vulnerability, how to exploit it, and how to prevent it. [writeups](writeups/)
 ### Level 1: In-Band SQLi
-- Level 1-1: Login bypass
-- Level 1-2: Where clause manipulation
-- Level 1-3: Extraction of database structure/ data using UNION
-- Level 1-4: Error-based data extraction
+- [Level 1-1: Login bypass](writeups/1-1.md)
+- [Level 1-2: Where clause manipulation](writeups/1-2.md)
+- [Level 1-3: Extraction of database structure/ data using UNION](writeups/1-3.md)
+- [Level 1-4: Error-based data extraction](writeups/1-4.md)
 ### Level 2: Blind SQLi
-- Level 2-1: Boolean-based blind SQLi
-- Level 2-2: Time-based blind SQLi
-- Level 2-3: Second-order SQLi
+- [Level 2-1: Boolean-based blind SQLi](writeups/2-1.md)
+- [Level 2-2: Time-based blind SQLi](writeups/2-2.md)
+- [Level 2-3: Second-order SQLi](writeups/2-3.md)
 ### Level 3: Advanced / Chained
-- Level 3-1: OOB SQLi using `dblink
-- Level 3-2: WAF/filter bypass techniques
-- Level 3-3: Chaining SQLi with other vulnerabilities (e.g. RCE, SSRF)
+- [Level 3-1: OOB SQLi using `dblink`](writeups/3-1.md)
+- [Level 3-2: WAF/filter bypass techniques](writeups/3-2.md)
+- [Level 3-3: Chaining SQLi with other vulnerabilities (e.g. RCE, SSRF)](writeups/3-3.md)
 
 ---
 
