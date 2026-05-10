@@ -80,38 +80,54 @@ Additionally, an SQLi can be classified by its execution time:
 ---
 
 ## Lab Structure
-The lab is structured by levels, each level focuses on a specific type of SQLi vulnerability and unlocks the next one. The levels are designed to gradually increase in difficulty and complexity, allowing you to build your skills and knowledge step by step. Each level has a writeup that explains the vulnerability, how to exploit it, and how to prevent it. [writeups](writeups/)
-### Level 1: In-Band SQLi
+The lab is structured by levels, each level focuses on a specific type of SQLi vulnerability and unlocks the next one. The levels are designed to gradually increase in difficulty and complexity, allowing you to build your skills and knowledge step by step. Each level has a writeup that explains the vulnerability, how to exploit it, and how to prevent it. [writeups](writeups/). Start on level 1 and each vulnerability will redirect you to the next one.
+### Level 1: In-Band SQLi — `http://localhost/login`
 - [Level 1-1: Login bypass](writeups/1-1.md)
 - [Level 1-2: Where clause manipulation](writeups/1-2.md)
 - [Level 1-3: Extraction of database structure/ data using UNION](writeups/1-3.md)
 - [Level 1-4: Error-based data extraction](writeups/1-4.md)
-### Level 2: Blind SQLi
+### Level 2: Blind SQLi — `http://localhost/tickets`
 - [Level 2-1: Boolean-based blind SQLi](writeups/2-1.md)
 - [Level 2-2: Time-based blind SQLi](writeups/2-2.md)
 - [Level 2-3: Second-order SQLi](writeups/2-3.md)
-### Level 3: Advanced / Chained
-- [Level 3-1: OOB SQLi using `dblink`](writeups/3-1.md)
+### Level 3: Advanced / Chained — `http://localhost/oob`
+- [Level 3-1: OOB SQLi](writeups/3-1.md)
 - [Level 3-2: WAF/filter bypass techniques](writeups/3-2.md)
-- [Level 3-3: Chaining SQLi with other vulnerabilities (e.g. RCE, SSRF)](writeups/3-3.md)
+- [Level 3-3: SQLi on superuser to RCE](writeups/3-3.md)
 
 ---
 
-## What This Lab Does Not Cover
+## What's Next?
 
-This lab covers the fundamentals, but SQLi is a broad topic. Some areas left out:
+If you completed this lab congratulations! You now have a solid understanding of SQLi vulnerabilities, how to exploit them and how to prevent them. However, there are more advanced techniques and variations that are not covered in this lab, such as:
 
-- **Other databases** — all levels use PostgreSQL. MySQL, MSSQL, SQLite, and Oracle each have different syntax, functions, and quirks (e.g. `GROUP_CONCAT` in MySQL, `xp_cmdshell` in MSSQL, `ROWNUM` in Oracle).
-- **Automated tooling** — [sqlmap](https://sqlmap.org/) automates detection and exploitation of most in-band and blind SQLi. This lab deliberately leaves that out to build manual understanding first. Real WAFs will block sqlmap's default signatures.
-- **DNS-based OOB** — Level 3-1 uses `dblink` over TCP. A more common real-world OOB technique is DNS exfiltration (e.g. via PostgreSQL's `dblink` or MSSQL's `xp_dirtree`), where data is embedded in DNS lookups to an attacker-controlled nameserver.
+- **Other databases** — all levels use PostgreSQL. MySQL, MSSQL, SQLite, and Oracle each have different syntax, functionsm quirks and where metadata is stored.
+- **Automated tooling** — [sqlmap](https://sqlmap.org/) automates detection and exploitation of most in-band and blind SQLi. This lab deliberately leaves that out to build manual understanding first.
+- **Real WAFs** — Level 3-2 has a very basic filter bypass, but real-world WAFs are much more complex and require a wider range of evasion techniques. Encoding tricks (chunked transfer, parameter pollution, header injection) used to sneak payloads past WAFs and proxies.
+- **ORM-specific injection** — Modern applications often use ORMs (Object Relational Mappers), not direct SQL queries. SQLi can also occur in the context of Object-Relational Mappers (ORMs) like Prisma, Django ORM, or SQLAlchemy, which have their own quirks and potential injection points.
 - **NoSQL injection** — MongoDB, Redis, and similar databases have their own injection classes that are structurally different from SQL injection.
-- **HTTP-layer evasion** — encoding tricks (chunked transfer, parameter pollution, header injection) used to sneak payloads past WAFs and proxies.
 - **Exploitation at scale** — automating extraction character-by-character, handling pagination, rate limiting, and parallelising blind injection over many requests.
 - **Post-exploitation** — what to do after you have RCE or DB access: pivoting, credential reuse, privilege escalation inside the OS.
+- **Who knows?** - The world of cybersecurity is always evolving, maybe you can discover new techniques and attack vectors that are not covered in this lab!
+
+---
+
+## Get to know (CSLab)[https://cs-lab.cisuc.uc.pt/]
+
+CyberSecurity Laboratory (CS-Lab) is a transversal laboratory of CISUC, promoting CyberSecurity research, activities, challenges like Capture The Flag (CTF), Ethical Hacking, and learning through academia partnerships.
+
+The CS-Lab includes cybersecurity researchers, professors, students which have a passion for security. The CS-Lab also participates in research and development activities, including international colaboration projects. 
+
+The CS-Lab provides access to cybersecurity academias, which are promoted by major vendos of security solutions like PaloAlto, Fortinet, Cisco among others.
+
+The CS-Lab borned from the First Foundation initiative on 2024 with funds to set up a initial infrastructure to support the different activities. 
+
+CS-lab is currently under the coordination of Bruno Sousa and João R. Campos.
 
 ---
 
 ### Useful Resources
+- [CS-Lab Website](https://cs-lab.cisuc.uc.pt/)
 - [OWASP SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection)
 - [OWASP SQLi Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html)
 - [PortSwigger SQLi Cheat Sheet](https://portswigger.net/web-security/sql-injection/cheat-sheet)

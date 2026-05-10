@@ -316,6 +316,14 @@ function logout() {
   flex: 1;
 }
 
+.congrats-dismiss {
+  font-size: 0.75rem;
+  color: #555;
+  flex-shrink: 0;
+  align-self: flex-start;
+  cursor: pointer;
+}
+
 .congrats-body {
   display: flex;
   flex-direction: column;
@@ -338,13 +346,5 @@ function logout() {
 
 .congrats-next:hover {
   background: #e8c96a;
-}
-
-.congrats-dismiss {
-  font-size: 0.75rem;
-  color: #555;
-  flex-shrink: 0;
-  align-self: flex-start;
-  cursor: pointer;
 }
 </style>

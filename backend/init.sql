@@ -120,9 +120,12 @@ INSERT INTO lista_vip (nome, segredo) VALUES
     ('Presidente', 'JUMENTOS{st0r3d_4nd_d4ng3r0us}');
 
 CREATE USER sqli_level2 WITH PASSWORD 'level2pass';
-GRANT SELECT ON bilhetes, unsuspecting_table, lista_vip TO sqli_level2;
-GRANT SELECT, INSERT ON reservas TO sqli_level2;
-GRANT USAGE, SELECT ON SEQUENCE reservas_id_seq TO sqli_level2;
+GRANT SELECT ON bilhetes, unsuspecting_table TO sqli_level2;
+
+CREATE USER sqli_level23 WITH PASSWORD 'level23pass';
+GRANT SELECT ON bilhetes, lista_vip TO sqli_level23;
+GRANT SELECT, INSERT ON reservas TO sqli_level23;
+GRANT USAGE, SELECT ON SEQUENCE reservas_id_seq TO sqli_level23;
 
 -- LEVEL 3
 

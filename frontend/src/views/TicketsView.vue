@@ -8,18 +8,6 @@ const error = ref('')
 const loading = ref(false)
 const congrats21 = ref(false)
 const congrats22 = ref(false)
-const congrats23 = ref(false)
-
-const reservaNome = ref('')
-const reservaCodigo = ref('')
-const reservaMsg = ref('')
-const reservaError = ref('')
-const reservaLoading = ref(false)
-
-const consultarCodigo = ref('')
-const setorResult = ref<string | null>(null)
-const setorError = ref('')
-const setorLoading = ref(false)
 
 async function verificar() {
   if (!codigo.value) return
@@ -50,52 +38,6 @@ async function verificar() {
   }
 }
 
-async function reservar() {
-  if (!reservaNome.value || !reservaCodigo.value) return
-  reservaMsg.value = ''
-  reservaError.value = ''
-  reservaLoading.value = true
-  try {
-    const res = await fetch('/api/reservar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nome: reservaNome.value, codigo: reservaCodigo.value }),
-    })
-    const data = await res.json()
-    if (!res.ok) {
-      reservaError.value = data.error ?? 'Erro ao registar reserva.'
-    } else {
-      reservaMsg.value = data.message ?? 'Reserva registada.'
-    }
-  } catch {
-    reservaError.value = 'Não foi possível contactar o servidor.'
-  } finally {
-    reservaLoading.value = false
-  }
-}
-
-async function consultarReserva() {
-  if (!consultarCodigo.value) return
-  setorResult.value = null
-  setorError.value = ''
-  setorLoading.value = true
-  try {
-    const res = await fetch(`/api/ver-reserva?codigo=${encodeURIComponent(consultarCodigo.value)}`)
-    const data = await res.json()
-    if (!res.ok) {
-      setorError.value = data.error ?? 'Erro ao consultar reserva.'
-    } else {
-      setorResult.value = data.setor
-      if (data.setor && data.setor.includes('JUMENTOS{')) {
-        congrats23.value = true
-      }
-    }
-  } catch {
-    setorError.value = 'Não foi possível contactar o servidor.'
-  } finally {
-    setorLoading.value = false
-  }
-}
 </script>
 
 <template>
@@ -110,16 +52,10 @@ async function consultarReserva() {
     <div v-if="congrats22" class="congrats-banner congrats-22">
       <div class="congrats-body">
         <span class="congrats-label">LEVEL 2-2 COMPLETE</span>
-        <span class="congrats-msg">You extracted the flag using only response timing, with no observable difference in the response body. Well done. Scroll down to try second-order injection.</span>
+        <span class="congrats-msg">You extracted the flag using only response timing, with no observable difference in the response body. Well done.</span>
+        <RouterLink to="/reservas" class="congrats-next">Avançar para Nível 2-3 &rarr;</RouterLink>
       </div>
       <span class="congrats-dismiss" @click="congrats22 = false">&#x2715;</span>
-    </div>
-    <div v-if="congrats23" class="congrats-banner congrats-23">
-      <div class="congrats-body">
-        <span class="congrats-label">LEVEL 2-3 COMPLETE</span>
-        <span class="congrats-msg">You stored a payload safely, then triggered it in a separate query. The injection was deferred second-order SQLi complete.</span>
-      </div>
-      <span class="congrats-dismiss" @click="congrats23 = false">&#x2715;</span>
     </div>
 
     <nav class="navbar">
@@ -160,43 +96,6 @@ async function consultarReserva() {
         <div v-else-if="disponivel === false" class="result-msg result-unavailable">Não disponível</div>
       </div>
 
-      <div class="card">
-        <p class="card-label">ESTÁDIO DAS BESTIAS — LISTA DE ESPERA</p>
-        <h1 class="card-title">Reservar Lugar</h1>
-        <p class="card-sub">Coloque o seu nome e o código do lugar para entrar na lista de espera.</p>
-
-        <div class="reservar-bar">
-          <input id="reservar-nome" v-model="reservaNome" type="text" placeholder="Nome" />
-          <input id="reservar-codigo" v-model="reservaCodigo" type="text" placeholder="Código (ex: A1)" />
-          <button class="reservar-btn search-btn" @click="reservar" :disabled="reservaLoading">
-            {{ reservaLoading ? '...' : 'Reservar' }}
-          </button>
-        </div>
-
-        <div v-if="reservaError" class="result-msg result-error">{{ reservaError }}</div>
-        <div v-if="reservaMsg" class="result-msg reserva-msg">{{ reservaMsg }}</div>
-
-        <div class="divider"></div>
-
-        <h2 class="card-subtitle">Consultar Reserva</h2>
-        <p class="card-sub">Introduza o código do lugar para consultar a sua reserva.</p>
-
-        <div class="search-bar">
-          <input
-            id="consultar-codigo"
-            v-model="consultarCodigo"
-            type="text"
-            placeholder="Código do lugar"
-            @keyup.enter="consultarReserva"
-          />
-          <button class="consultar-btn search-btn" @click="consultarReserva" :disabled="setorLoading">
-            {{ setorLoading ? '...' : 'Consultar' }}
-          </button>
-        </div>
-
-        <div v-if="setorError" class="result-msg result-error">{{ setorError }}</div>
-        <div v-if="setorResult !== null" class="result-msg setor-result">Setor: {{ setorResult }}</div>
-      </div>
     </main>
 
     <footer class="footer">
@@ -316,15 +215,6 @@ async function consultarReserva() {
   margin: 0 0 0.5rem 0;
 }
 
-.card-subtitle {
-  font-size: 1rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #fff;
-  margin: 0 0 0.4rem 0;
-}
-
 .card-sub {
   font-size: 0.8rem;
   color: #555;
@@ -358,32 +248,6 @@ async function consultarReserva() {
   border-color: #C9A84C;
 }
 
-.reservar-bar {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1.25rem;
-}
-
-.reservar-bar input {
-  background: #111;
-  border: 1px solid #2a2a2a;
-  color: #fff;
-  padding: 0.7rem 1rem;
-  font-size: 0.9rem;
-  font-family: inherit;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.reservar-bar input::placeholder {
-  color: #444;
-}
-
-.reservar-bar input:focus {
-  border-color: #C9A84C;
-}
-
 .search-btn {
   background: #C9A84C;
   color: #000;
@@ -405,12 +269,6 @@ async function consultarReserva() {
 .search-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-.divider {
-  height: 1px;
-  background: #1e1e1e;
-  margin: 1.75rem 0;
 }
 
 .result-msg {
@@ -439,26 +297,6 @@ async function consultarReserva() {
   color: #ff6b6b;
   font-family: monospace;
   font-size: 0.82rem;
-  text-transform: none;
-  letter-spacing: 0;
-  word-break: break-word;
-}
-
-.reserva-msg {
-  background: #001a0d;
-  border: 1px solid #0a4020;
-  color: #4CAF84;
-  text-transform: none;
-  letter-spacing: 0;
-  font-size: 0.85rem;
-}
-
-.setor-result {
-  background: #111;
-  border: 1px solid #2a2a2a;
-  color: #ccc;
-  font-family: monospace;
-  font-size: 0.9rem;
   text-transform: none;
   letter-spacing: 0;
   word-break: break-word;
@@ -506,11 +344,6 @@ async function consultarReserva() {
   border-bottom-color: #4CAF84;
 }
 
-.congrats-23 {
-  background: #0a001a;
-  border-bottom-color: #9b59b6;
-}
-
 .congrats-body {
   display: flex;
   flex-direction: column;
@@ -529,8 +362,13 @@ async function consultarReserva() {
   color: #4CAF84;
 }
 
-.congrats-23 .congrats-label {
-  color: #9b59b6;
+.congrats-next {
+  display: inline-block;
+  margin-top: 0.5rem;
+  color: #4CAF84;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.85rem;
 }
 
 .congrats-msg {

@@ -123,5 +123,4 @@ async function lookup() {
 .congrats-msg { font-size: 0.85rem; color: #ccc; line-height: 1.5; }
 .congrats-msg code { background: #2a2a2a; padding: 0.1em 0.4em; border-radius: 3px; font-family: monospace; color: #C9A84C; font-size: 0.8rem; }
 .congrats-next { display: inline-block; margin-top: 0.5rem; color: #C9A84C; text-decoration: none; font-weight: 700; font-size: 0.85rem; }
-.congrats-dismiss { cursor: pointer; color: #666; font-size: 1rem; line-height: 1; flex-shrink: 0; }
-</style>
+.congrats-dismiss { cursor: pointer; color: #666; font-size: 1rem; line-height: 1; flex-shrink: 0; }</style>

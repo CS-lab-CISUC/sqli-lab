@@ -121,5 +121,4 @@ async function buscar() {
 .congrats-label { font-size: 0.7rem; letter-spacing: 0.15em; color: #C9A84C; font-weight: 800; text-transform: uppercase; }
 .congrats-msg { font-size: 0.85rem; color: #ccc; line-height: 1.5; }
 .congrats-next { display: inline-block; margin-top: 0.5rem; color: #C9A84C; text-decoration: none; font-weight: 700; font-size: 0.85rem; }
-.congrats-dismiss { cursor: pointer; color: #666; font-size: 1rem; line-height: 1; flex-shrink: 0; }
-</style>
+.congrats-dismiss { cursor: pointer; color: #666; font-size: 1rem; line-height: 1; flex-shrink: 0; }</style>

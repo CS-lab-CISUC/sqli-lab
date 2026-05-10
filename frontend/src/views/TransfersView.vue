@@ -75,7 +75,6 @@ function logout() {
       <div class="nav-center">
         <RouterLink to="/dashboard" class="nav-link">Entradas</RouterLink>
         <RouterLink to="/dashboard/transfers" class="nav-link nav-link-active">Transferências</RouterLink>
-        <RouterLink v-if="user?.role === 'goat'" to="/dashboard/perfil" class="nav-link">Análise</RouterLink>
       </div>
       <div class="nav-right">
         <span v-if="user" class="nav-user">{{ user.sub }}</span>

@@ -7,6 +7,7 @@ from functools import wraps
 
 import jwt
 import psycopg
+import psycopg2
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
@@ -18,6 +19,8 @@ DB_GOAT_USER = os.environ["DB_GOAT_USER"]
 DB_GOAT_PASSWORD = os.environ["DB_GOAT_PASSWORD"]
 DB_LEVEL2_USER = os.environ["DB_LEVEL2_USER"]
 DB_LEVEL2_PASSWORD = os.environ["DB_LEVEL2_PASSWORD"]
+DB_LEVEL23_USER = os.environ["DB_LEVEL23_USER"]
+DB_LEVEL23_PASSWORD = os.environ["DB_LEVEL23_PASSWORD"]
 DB_LEVEL3_USER = os.environ["DB_LEVEL3_USER"]
 DB_LEVEL3_PASSWORD = os.environ["DB_LEVEL3_PASSWORD"]
 DB_LEVEL3_RCE_USER = os.environ["DB_LEVEL3_RCE_USER"]
@@ -40,15 +43,19 @@ def get_conn_level2():
         host=DB_HOST, user=DB_LEVEL2_USER, password=DB_LEVEL2_PASSWORD, dbname=DB_NAME,
     )
 
+def get_conn_level23():
+    return psycopg.connect(
+        host=DB_HOST, user=DB_LEVEL23_USER, password=DB_LEVEL23_PASSWORD, dbname=DB_NAME,
+    )
+
 def get_conn_level3():
     return psycopg.connect(
         host=DB_HOST, user=DB_LEVEL3_USER, password=DB_LEVEL3_PASSWORD, dbname=DB_NAME,
     )
 
 def get_conn_level3_rce():
-    return psycopg.connect(
+    return psycopg2.connect(
         host=DB_HOST, user=DB_LEVEL3_RCE_USER, password=DB_LEVEL3_RCE_PASSWORD, dbname=DB_NAME,
-        autocommit=True,
     )
 
 _WAF_KEYWORDS = [
@@ -190,7 +197,7 @@ def reservar():
     if not nome or not codigo:
         return jsonify({"error": "Nome e código são obrigatórios"}), 400
     try:
-        with get_conn_level2() as conn:
+        with get_conn_level23() as conn:
             with conn.cursor() as cur:
                 cur.execute("INSERT INTO reservas (nome, codigo) VALUES (%s, %s)", (nome, codigo))
     except Exception as e:
@@ -201,7 +208,7 @@ def reservar():
 def ver_reserva():
     codigo = request.args.get("codigo", "")
     try:
-        with get_conn_level2() as conn:
+        with get_conn_level23() as conn:
             with conn.cursor() as cur:
                 cur.execute("SELECT nome FROM reservas WHERE codigo = %s LIMIT 1", (codigo,))
                 row = cur.fetchone()
@@ -245,18 +252,17 @@ def waf_route():
             cur.execute(query)
             rows = cur.fetchall()
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        pass
     return jsonify([{"nome": r[0]} for r in rows])
 
 @app.route("/api/config", methods=["GET"])
 def config():
     section = request.args.get("section", "")
     try:
-        conn = get_conn_level3_rce()
-        with conn.cursor() as cur:
-            query = f"SELECT valor FROM configuracoes WHERE secao = '{section}'"
-            cur.execute(query)
-            row = cur.fetchone()
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    return jsonify({"valor": row[0] if row else None})
+        with get_conn_level3_rce() as conn:
+            with conn.cursor() as cur:
+                query = f"SELECT valor FROM configuracoes WHERE secao = '{section}'"
+                cur.execute(query)
+    except Exception:
+        pass
+    return jsonify({"valor": "producao"})

