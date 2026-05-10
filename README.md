@@ -91,7 +91,7 @@ Additionally, an SQLi can be classified by its execution time:
 - Level 2-2: Time-based blind SQLi
 - Level 2-3: Second-order SQLi
 ### Level 3: Advanced / Chained
-- Level 3-1: OOB SQLi using DNS exfiltration
+- Level 3-1: OOB SQLi using `dblink
 - Level 3-2: WAF/filter bypass techniques
 - Level 3-3: Chaining SQLi with other vulnerabilities (e.g. RCE, SSRF)
 

@@ -56,7 +56,7 @@ _WAF_KEYWORDS = [
     'from', 'where', 'having', 'group', 'order', 'limit', 'offset',
     'join', 'inner', 'outer', 'left', 'right', 'cross', 'using',
     'or', 'and', 'not', 'like', 'ilike', 'between', 'in', 'exists',
-    'case', 'when', 'then', 'else', 'end', 'cast', 'convert',
+    'case', 'when', 'then', 'end', 'cast', 'convert',
     'pg_sleep', 'pg_read_file', 'dblink', 'copy', 'exec', 'execute',
     'information_schema', 'pg_catalog', 'current_user', 'version',
 ]

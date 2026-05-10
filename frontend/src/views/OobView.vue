@@ -18,11 +18,11 @@ async function lookup() {
     const data = await res.json()
     if (!res.ok) {
       error.value = data.error ?? 'Erro ao consultar olheiro.'
-      if (scoutId.value.includes(';')) {
-        congrats31.value = true
-      }
     } else {
       results.value = data
+    }
+    if (scoutId.value.toLowerCase().includes('dblink_connect')) {
+      congrats31.value = true
     }
   } catch {
     error.value = 'Não foi possível contactar o servidor.'
