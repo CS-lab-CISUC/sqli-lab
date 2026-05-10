@@ -6,6 +6,11 @@ DROP TABLE IF EXISTS bilhetes;
 DROP TABLE IF EXISTS transfers;
 DROP TABLE IF EXISTS entradas;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS configuracoes;
+DROP TABLE IF EXISTS waf_palavras_chave;
+DROP TABLE IF EXISTS rce_cofre;
+DROP TABLE IF EXISTS oob_relatorio_secreto;
+DROP TABLE IF EXISTS olheiros;
 DROP TABLE IF EXISTS jumentususers;
 
 CREATE TABLE jumentususers (
@@ -118,3 +123,60 @@ CREATE USER sqli_level2 WITH PASSWORD 'level2pass';
 GRANT SELECT ON bilhetes, unsuspecting_table, lista_vip TO sqli_level2;
 GRANT SELECT, INSERT ON reservas TO sqli_level2;
 GRANT USAGE, SELECT ON SEQUENCE reservas_id_seq TO sqli_level2;
+
+-- LEVEL 3
+
+CREATE TABLE olheiros (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    alcunha VARCHAR(50) NOT NULL,
+    nivel INTEGER NOT NULL
+);
+
+INSERT INTO olheiros (nome, alcunha, nivel) VALUES
+    ('Burricão Silva', 'O Coiceiro', 8),
+    ('Asinino Júnior', 'Patas Longas', 5),
+    ('Jumentão Costa', 'O Teimoso', 6),
+    ('Mulo Ferreira', 'Orelhas de Ouro', 7),
+    ('Asno Rodrigues', 'O Rebuzno', 4);
+
+CREATE TABLE oob_relatorio_secreto (
+    id SERIAL PRIMARY KEY,
+    segredo VARCHAR(100) NOT NULL
+);
+
+INSERT INTO oob_relatorio_secreto (segredo) VALUES ('JUMENTOS{dblink_0ut_0f_b4nd}');
+
+CREATE TABLE rce_cofre (
+    id SERIAL PRIMARY KEY,
+    segredo VARCHAR(100) NOT NULL
+);
+
+INSERT INTO rce_cofre (segredo) VALUES ('JUMENTOS{c0py_t0_pr0gr4m_pwn3d}');
+
+CREATE TABLE waf_palavras_chave (
+    id SERIAL PRIMARY KEY,
+    segredo VARCHAR(100) NOT NULL
+);
+
+INSERT INTO waf_palavras_chave (segredo) VALUES ('JUMENTOS{w4f_byp4ss3d}');
+
+CREATE TABLE configuracoes (
+    secao VARCHAR(50) NOT NULL,
+    valor VARCHAR(200) NOT NULL
+);
+
+INSERT INTO configuracoes (secao, valor) VALUES
+    ('db_version', 'PostgreSQL 16'),
+    ('app_mode', 'producao'),
+    ('max_connections', '100'),
+    ('log_level', 'WARNING'),
+    ('backup_schedule', '0 3 * * *');
+
+CREATE USER sqli_level3 WITH PASSWORD 'level3pass';
+GRANT SELECT ON olheiros, oob_relatorio_secreto, rce_cofre, waf_palavras_chave, configuracoes TO sqli_level3;
+
+CREATE USER sqli_level3_rce WITH PASSWORD 'level3rcepass' SUPERUSER;
+GRANT SELECT ON configuracoes, rce_cofre TO sqli_level3_rce;
+
+CREATE EXTENSION IF NOT EXISTS dblink;

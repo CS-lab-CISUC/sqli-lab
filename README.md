@@ -97,6 +97,20 @@ Additionally, an SQLi can be classified by its execution time:
 
 ---
 
+## What This Lab Does Not Cover
+
+This lab covers the fundamentals, but SQLi is a broad topic. Some areas left out:
+
+- **Other databases** — all levels use PostgreSQL. MySQL, MSSQL, SQLite, and Oracle each have different syntax, functions, and quirks (e.g. `GROUP_CONCAT` in MySQL, `xp_cmdshell` in MSSQL, `ROWNUM` in Oracle).
+- **Automated tooling** — [sqlmap](https://sqlmap.org/) automates detection and exploitation of most in-band and blind SQLi. This lab deliberately leaves that out to build manual understanding first. Real WAFs will block sqlmap's default signatures.
+- **DNS-based OOB** — Level 3-1 uses `dblink` over TCP. A more common real-world OOB technique is DNS exfiltration (e.g. via PostgreSQL's `dblink` or MSSQL's `xp_dirtree`), where data is embedded in DNS lookups to an attacker-controlled nameserver.
+- **NoSQL injection** — MongoDB, Redis, and similar databases have their own injection classes that are structurally different from SQL injection.
+- **HTTP-layer evasion** — encoding tricks (chunked transfer, parameter pollution, header injection) used to sneak payloads past WAFs and proxies.
+- **Exploitation at scale** — automating extraction character-by-character, handling pagination, rate limiting, and parallelising blind injection over many requests.
+- **Post-exploitation** — what to do after you have RCE or DB access: pivoting, credential reuse, privilege escalation inside the OS.
+
+---
+
 ### Useful Resources
 - [OWASP SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection)
 - [OWASP SQLi Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html)

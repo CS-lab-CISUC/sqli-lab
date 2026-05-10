@@ -13,6 +13,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - postgres
 
@@ -27,6 +29,10 @@ services:
       - DB_GOAT_PASSWORD=sqli_goat_pass
       - DB_LEVEL2_USER=sqli_level2
       - DB_LEVEL2_PASSWORD=level2pass
+      - DB_LEVEL3_USER=sqli_level3
+      - DB_LEVEL3_PASSWORD=level3pass
+      - DB_LEVEL3_RCE_USER=sqli_level3_rce
+      - DB_LEVEL3_RCE_PASSWORD=level3rcepass
       - DB_NAME=postgres
       - JWT_SECRET=jumentos-lab-secret
     ports:

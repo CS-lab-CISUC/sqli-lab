@@ -58,9 +58,9 @@ async function buscar() {
     <main class="content">
       <div class="card">
         <p class="card-label">NÍVEL 3-2 — WAF BYPASS</p>
-        <h1 class="card-title">Pesquisa de Jogadores</h1>
+        <h1 class="card-title">Pesquisa de Olheiros</h1>
         <p class="card-sub">
-          Pesquisa jogadores pelo nível de rating. O endpoint está protegido por um WAF multicamadas.<br>
+          Pesquisa olheiros pelo nível. O endpoint está protegido por um WAF multicamadas.<br>
           Tenta injectar directamente e observa o que o WAF bloqueia ou transforma.
         </p>
 
@@ -76,7 +76,7 @@ async function buscar() {
           </button>
         </div>
 
-        <div v-if="error" class="result-msg result-error error-msg">{{ error }}</div>
+        <div v-if="error" class="result-msg result-error">{{ error }}</div>
 
         <table v-if="results.length" class="entries-table">
           <thead>
@@ -100,7 +100,7 @@ async function buscar() {
 .nav-links { list-style: none; display: flex; gap: 1.5rem; margin: 0; padding: 0; }
 .nav-links a { color: #aaa; text-decoration: none; font-size: 0.9rem; transition: color 0.15s; }
 .nav-links a:hover, .nav-active { color: #C9A84C !important; }
-.content { max-width: 760px; margin: 3rem auto; padding: 0 1rem; }
+.content { max-width: 760px; margin: 3rem auto; padding: 0 1rem; display: flex; flex-direction: column; gap: 2rem; }
 .card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 2rem; }
 .card-label { font-size: 0.7rem; letter-spacing: 0.15em; color: #C9A84C; margin: 0 0 0.5rem; text-transform: uppercase; }
 .card-title { font-size: 1.6rem; font-weight: 800; margin: 0 0 0.5rem; }

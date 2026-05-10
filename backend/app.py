@@ -1,4 +1,7 @@
 import os
+import re
+import urllib.parse
+import unicodedata
 from datetime import datetime, timezone, timedelta
 from functools import wraps
 
@@ -15,6 +18,10 @@ DB_GOAT_USER = os.environ["DB_GOAT_USER"]
 DB_GOAT_PASSWORD = os.environ["DB_GOAT_PASSWORD"]
 DB_LEVEL2_USER = os.environ["DB_LEVEL2_USER"]
 DB_LEVEL2_PASSWORD = os.environ["DB_LEVEL2_PASSWORD"]
+DB_LEVEL3_USER = os.environ["DB_LEVEL3_USER"]
+DB_LEVEL3_PASSWORD = os.environ["DB_LEVEL3_PASSWORD"]
+DB_LEVEL3_RCE_USER = os.environ["DB_LEVEL3_RCE_USER"]
+DB_LEVEL3_RCE_PASSWORD = os.environ["DB_LEVEL3_RCE_PASSWORD"]
 DB_NAME = os.environ["DB_NAME"]
 JWT_SECRET = os.environ.get("JWT_SECRET", "dev-secret-change-in-prod")
 
@@ -32,6 +39,42 @@ def get_conn_level2():
     return psycopg.connect(
         host=DB_HOST, user=DB_LEVEL2_USER, password=DB_LEVEL2_PASSWORD, dbname=DB_NAME,
     )
+
+def get_conn_level3():
+    return psycopg.connect(
+        host=DB_HOST, user=DB_LEVEL3_USER, password=DB_LEVEL3_PASSWORD, dbname=DB_NAME,
+    )
+
+def get_conn_level3_rce():
+    return psycopg.connect(
+        host=DB_HOST, user=DB_LEVEL3_RCE_USER, password=DB_LEVEL3_RCE_PASSWORD, dbname=DB_NAME,
+        autocommit=True,
+    )
+
+_WAF_KEYWORDS = [
+    'select', 'union', 'insert', 'update', 'delete', 'drop', 'truncate',
+    'from', 'where', 'having', 'group', 'order', 'limit', 'offset',
+    'join', 'inner', 'outer', 'left', 'right', 'cross', 'using',
+    'or', 'and', 'not', 'like', 'ilike', 'between', 'in', 'exists',
+    'case', 'when', 'then', 'else', 'end', 'cast', 'convert',
+    'pg_sleep', 'pg_read_file', 'dblink', 'copy', 'exec', 'execute',
+    'information_schema', 'pg_catalog', 'current_user', 'version',
+]
+
+def level3_waf(value: str):
+    v = urllib.parse.unquote_plus(value)
+    v = unicodedata.normalize('NFKC', v)
+    v = re.sub(r'/\*[\s\S]*?\*/', '', v)
+    v = re.sub(r'--[^\r\n]*', '', v)
+    v = re.sub(r'#[^\r\n]*', '', v)
+    v = re.sub(r'[\s\x00-\x1f\x7f]+', ' ', v).strip()
+    for ch in ("'", '"', ';', '\\', '`'):
+        if ch in v:
+            return None
+    for _ in range(2):
+        for kw in _WAF_KEYWORDS:
+            v = re.sub(re.escape(kw), '', v, flags=re.IGNORECASE)
+    return v
 
 def require_auth(f):
     @wraps(f)
@@ -171,3 +214,49 @@ def ver_reserva():
     except Exception as e:
         return jsonify({"error": "Ocorreu um erro"}), 500
     return jsonify({"setor": row2[0] if row2 else None})
+
+
+# LEVEL 3
+
+@app.route("/api/oob", methods=["GET"])
+def oob():
+    scout_id = request.args.get("id", "1")
+    try:
+        conn = get_conn_level3()
+        with conn.cursor() as cur:
+            cur.execute("SET statement_timeout = '500ms'")
+            query = f"SELECT nome, alcunha FROM olheiros WHERE id = {scout_id}"
+            cur.execute(query)
+            cur.fetchall()
+    except Exception:
+        pass
+    return jsonify([{"nome": "Zé Burro", "alcunha": "O Fiel"}])
+
+@app.route("/api/waf", methods=["GET"])
+def waf_route():
+    search = request.args.get("search", "")
+    safe = level3_waf(search)
+    if safe is None:
+        return jsonify({"error": "WAF: request blocked"}), 403
+    try:
+        conn = get_conn_level3()
+        with conn.cursor() as cur:
+            query = f"SELECT nome FROM olheiros WHERE nivel = {safe}"
+            cur.execute(query)
+            rows = cur.fetchall()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    return jsonify([{"nome": r[0]} for r in rows])
+
+@app.route("/api/config", methods=["GET"])
+def config():
+    section = request.args.get("section", "")
+    try:
+        conn = get_conn_level3_rce()
+        with conn.cursor() as cur:
+            query = f"SELECT valor FROM configuracoes WHERE secao = '{section}'"
+            cur.execute(query)
+            row = cur.fetchone()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    return jsonify({"valor": row[0] if row else None})
