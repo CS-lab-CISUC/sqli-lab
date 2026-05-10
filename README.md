@@ -112,8 +112,8 @@ If you completed this lab congratulations! You now have a solid understanding of
 
 ---
 
-## Get to know CSLab
-CyberSecurity Laboratory (CS-Lab)[https://cs-lab.cisuc.uc.pt/]
+## Get to know CS-Lab
+CyberSecurity Laboratory [CS-Lab](https://cs-lab.cisuc.uc.pt/)
  is a transversal laboratory of CISUC, promoting CyberSecurity research, activities, challenges like Capture The Flag (CTF), Ethical Hacking, and learning through academia partnerships.
 
 The CS-Lab includes cybersecurity researchers, professors, students which have a passion for security. The CS-Lab also participates in research and development activities, including international colaboration projects. 
