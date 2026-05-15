@@ -126,7 +126,7 @@ CS-lab is currently under the coordination of Bruno Sousa and João R. Campos.
 
 ## Contact Us
 - [Events @ CS-Lab Discord Server]()
-- [Miguelagsilva](https://discord.com/users/ 268061003936169984) - author of the sqli-lab
+- [Miguelagsilva Discord User](https://discord.com/users/268061003936169984) - author of the sqli-lab
 - cslab@dei.uc.pt
 
 ---
