@@ -125,7 +125,7 @@ The CS-Lab borned from the First Foundation initiative on 2024 with funds to set
 CS-lab is currently under the coordination of Bruno Sousa and João R. Campos.
 
 ## Contact Us
-- [Events @ CS-Lab Discord Server]()
+- [Events @ CS-Lab Discord Server](https://discord.com/invite/Rya5cBQACD)
 - [Miguelagsilva Discord User](https://discord.com/users/268061003936169984) - author of the sqli-lab
 - cslab@dei.uc.pt
 
