@@ -124,9 +124,14 @@ The CS-Lab borned from the First Foundation initiative on 2024 with funds to set
 
 CS-lab is currently under the coordination of Bruno Sousa and João R. Campos.
 
+## Contact Us
+- [Events @ CS-Lab Discord Server]()
+- [Miguelagsilva](https://discord.com/users/ 268061003936169984) - author of the sqli-lab
+- cslab@dei.uc.pt
+
 ---
 
-### Useful Resources
+## Useful Resources
 - [CS-Lab Website](https://cs-lab.cisuc.uc.pt/)
 - [OWASP SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection)
 - [OWASP SQLi Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html)
